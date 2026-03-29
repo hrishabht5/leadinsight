@@ -1,0 +1,37 @@
+# render.yaml — Render Blueprint for LeadPulse Backend
+# Place this in the repo root and Render can auto-configure from it.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: leadpulse-api
+    runtime: docker
+    rootDir: leadpulse-fullstack/backend
+    dockerfilePath: ./Dockerfile
+    plan: free  # Change to "starter" ($7/mo) for always-on
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: LeadPulse
+      - key: DEBUG
+        value: "false"
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true  # Render generates a random value
+      - key: SUPABASE_URL
+        sync: false  # You'll set this manually
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_WEBHOOK_VERIFY_TOKEN
+        sync: false
+      - key: FACEBOOK_API_VERSION
+        value: v19.0
+      - key: ALLOWED_ORIGINS
+        sync: false  # Set to your Vercel URL after deploying frontend

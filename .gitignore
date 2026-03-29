@@ -1,0 +1,24 @@
+# Node / Frontend / Backend
+node_modules/
+dist/
+build/
+.vite/
+.next/
+
+# Env files — NEVER commit these
+.env
+backend/.env
+frontend/.env
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

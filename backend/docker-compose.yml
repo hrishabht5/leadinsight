@@ -1,0 +1,46 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LeadPulse — Local Development Stack
+# Usage:  docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────
+  api:
+    build: .
+    container_name: leadpulse_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app          # Hot-reload in dev
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # ── Redis (pub/sub for SSE across multiple API instances) ────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: leadpulse_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # ── ngrok — expose local webhook to Meta (dev only) ──────────────────────
+  # Remove in production. Set NGROK_AUTHTOKEN in .env
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: leadpulse_ngrok
+    command: http api:8000
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    ports:
+      - "4040:4040"             # ngrok dashboard at http://localhost:4040
+    depends_on:
+      - api
+    profiles:
+      - dev                     # Only starts with: docker compose --profile dev up
