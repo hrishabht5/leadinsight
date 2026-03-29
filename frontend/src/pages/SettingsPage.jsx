@@ -71,7 +71,7 @@ export default function SettingsPage() {
       return
     }
     const redirect = `${window.location.origin}/settings`
-    const url = `https://www.facebook.com/dialog/oauth?client_id=${VITE_FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirect)}&scope=leads_retrieval,pages_manage_metadata,pages_show_list,pages_read_engagement&response_type=code&auth_type=rerequest`
+    const url = `https://www.facebook.com/dialog/oauth?client_id=${VITE_FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirect)}&scope=leads_retrieval,pages_manage_metadata,pages_show_list&response_type=code`
     window.location.href = url
   }
 
