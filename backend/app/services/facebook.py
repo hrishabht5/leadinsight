@@ -155,22 +155,67 @@ async def get_long_lived_token(short_lived_token: str) -> dict:
 
 
 async def get_pages(user_access_token: str) -> list[dict]:
-    """Return the list of pages the user manages."""
-    url = f"{GRAPH_BASE}/me/accounts"
-    params = {
-        "access_token": user_access_token,
-        "fields": "id,name,access_token,instagram_business_account",
-        "limit": 100,
-    }
-    logger.info("📃 Fetching /me/accounts from Facebook Graph API...")
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(url, params=params)
-        data = resp.json()
-        logger.info(f"📃 /me/accounts response status={resp.status_code} raw={data}")
-        resp.raise_for_status()
-        pages = data.get("data", [])
-        logger.info(f"📃 Found {len(pages)} page(s): {[p.get('name') for p in pages]}")
-        return pages
+    """
+    Return ALL pages the user manages:
+    - Personal pages via /me/accounts
+    - Business Manager pages via /me/businesses → /owned_pages + /client_pages
+    """
+    all_pages: list[dict] = []
+    seen_ids: set[str] = set()
+
+    def _add(pages: list[dict]):
+        for p in pages:
+            pid = p.get("id")
+            if pid and pid not in seen_ids:
+                seen_ids.add(pid)
+                all_pages.append(p)
+
+    fields = "id,name,access_token"
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        # ── 1. Personal pages (/me/accounts) ─────────────────────────────────
+        logger.info("📃 Fetching personal pages via /me/accounts...")
+        r = await client.get(
+            f"{GRAPH_BASE}/me/accounts",
+            params={"access_token": user_access_token, "fields": fields, "limit": 100},
+        )
+        data = r.json()
+        logger.info(f"📃 /me/accounts → status={r.status_code} raw={data}")
+        _add(data.get("data", []))
+
+        # ── 2. Business Manager pages ─────────────────────────────────────────
+        logger.info("🏢 Fetching businesses via /me/businesses...")
+        biz_r = await client.get(
+            f"{GRAPH_BASE}/me/businesses",
+            params={"access_token": user_access_token, "fields": "id,name", "limit": 50},
+        )
+        biz_data = biz_r.json()
+        logger.info(f"🏢 /me/businesses → status={biz_r.status_code} count={len(biz_data.get('data', []))}")
+
+        for biz in biz_data.get("data", []):
+            biz_id = biz["id"]
+            biz_name = biz.get("name", biz_id)
+
+            # Owned pages
+            owned_r = await client.get(
+                f"{GRAPH_BASE}/{biz_id}/owned_pages",
+                params={"access_token": user_access_token, "fields": fields, "limit": 100},
+            )
+            owned = owned_r.json()
+            logger.info(f"   → {biz_name}/owned_pages status={owned_r.status_code} pages={[p.get('name') for p in owned.get('data', [])]}")
+            _add(owned.get("data", []))
+
+            # Client pages
+            client_r = await client.get(
+                f"{GRAPH_BASE}/{biz_id}/client_pages",
+                params={"access_token": user_access_token, "fields": fields, "limit": 100},
+            )
+            client_pages = client_r.json()
+            logger.info(f"   → {biz_name}/client_pages status={client_r.status_code} pages={[p.get('name') for p in client_pages.get('data', [])]}")
+            _add(client_pages.get("data", []))
+
+    logger.info(f"✅ Total pages found: {len(all_pages)} → {[p.get('name') for p in all_pages]}")
+    return all_pages
 
 
 async def subscribe_page_to_leadgen(page_id: str, page_access_token: str) -> bool:
