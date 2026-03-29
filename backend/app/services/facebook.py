@@ -91,6 +91,8 @@ async def fetch_lead_detail(lead_id: str, page_access_token: str) -> Optional[di
     }
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(url, params=params)
+        if resp.status_code != 200:
+            logger.error(f"❌ Graph API error for lead {lead_id}: status={resp.status_code} body={resp.text[:300]}")
         resp.raise_for_status()
         data = resp.json()
 

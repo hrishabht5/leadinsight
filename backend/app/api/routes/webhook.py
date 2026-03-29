@@ -42,19 +42,26 @@ async def receive_webhook(
     db: Client = Depends(get_db),
 ):
     body = await request.body()
+    logger.info(f"📬 Webhook POST received — body_len={len(body)} sig={x_hub_signature_256[:20] if x_hub_signature_256 else 'MISSING'}…")
 
     # 1. Verify signature
     if not fb_service.verify_webhook_signature(body, x_hub_signature_256):
-        logger.warning("⚠️  Invalid webhook signature — rejected.")
+        logger.warning(f"⚠️  Invalid webhook signature — sig_header={x_hub_signature_256!r}")
         raise HTTPException(status_code=401, detail="Invalid signature")
 
     payload = json.loads(body)
-    if payload.get("object") != "page":
+    object_type = payload.get("object")
+    if object_type != "page":
+        logger.info(f"Webhook object={object_type!r} — ignored (not 'page')")
         return {"status": "ignored"}
 
     # 2. Extract lead entries (may be batched)
     entries = fb_service.extract_lead_entries(payload)
-    logger.info(f"📥 Webhook received: {len(entries)} lead(s)")
+    logger.info(f"📥 Webhook entries: {len(entries)} — ids={[e.get('fb_lead_id') for e in entries]}")
+
+    if not entries:
+        logger.warning(f"⚠️  Webhook had 'page' object but no leadgen changes. Raw: {json.dumps(payload)[:500]}")
+        return {"status": "no_leads"}
 
     # 3. Process each lead in the background so Meta gets 200 immediately
     for entry in entries:
@@ -67,24 +74,30 @@ async def receive_webhook(
 async def _process_lead(db: Client, entry: dict):
     fb_lead_id = entry.get("fb_lead_id")
     fb_page_id = entry.get("fb_page_id")
+    logger.info(f"🔄 Processing lead fb_lead_id={fb_lead_id} fb_page_id={fb_page_id}")
+
     if not fb_lead_id or not fb_page_id:
+        logger.warning(f"⚠️  Missing fb_lead_id or fb_page_id in entry: {entry}")
         return
 
     try:
         # Look up which workspace owns this page
-        page_row = (
+        page_result = (
             db.table("connected_pages")
             .select("workspace_id, page_access_token")
             .eq("page_id", fb_page_id)
-            .single()
             .execute()
         )
-        if not page_row.data:
-            logger.warning(f"Page {fb_page_id} not found in any workspace.")
+        if not page_result.data:
+            logger.warning(
+                f"⚠️  Page {fb_page_id} not found in connected_pages. "
+                f"Make sure this page is connected in Settings."
+            )
             return
 
-        workspace_id = page_row.data["workspace_id"]
-        page_access_token = page_row.data["page_access_token"]
+        workspace_id = page_result.data[0]["workspace_id"]
+        page_access_token = page_result.data[0]["page_access_token"]
+        logger.info(f"✅ Page {fb_page_id} → workspace {workspace_id}")
 
         # Deduplicate
         existing = await lead_service.get_lead_by_fb_id(db, fb_lead_id, workspace_id)
@@ -93,8 +106,10 @@ async def _process_lead(db: Client, entry: dict):
             return
 
         # Fetch full lead details from Graph API
+        logger.info(f"📡 Fetching lead detail from Graph API for {fb_lead_id}")
         lead_detail = await fb_service.fetch_lead_detail(fb_lead_id, page_access_token)
         if not lead_detail:
+            logger.warning(f"⚠️  fetch_lead_detail returned None for {fb_lead_id}")
             return
 
         # Enrich with webhook metadata
@@ -113,4 +128,4 @@ async def _process_lead(db: Client, entry: dict):
         logger.info(f"📡 Notified {notified} dashboard client(s).")
 
     except Exception as exc:
-        logger.exception(f"Error processing lead {fb_lead_id}: {exc}")
+        logger.exception(f"❌ Error processing lead fb_lead_id={fb_lead_id} fb_page_id={fb_page_id}: {exc}")
