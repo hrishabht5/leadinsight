@@ -6,7 +6,7 @@ services:
   - type: web
     name: leadpulse-api
     runtime: docker
-    rootDir: leadpulse-fullstack/backend
+    rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free  # Change to "starter" ($7/mo) for always-on
     healthCheckPath: /health
