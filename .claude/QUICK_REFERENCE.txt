@@ -1,0 +1,286 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║          CLAUDE CODE FRAMEWORKS - QUICK REFERENCE GUIDE                    ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 CHOOSE YOUR TASK BELOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─ 1️⃣ STARTING A NEW FEATURE ──────────────────────────────────────────────┐
+│                                                                            │
+│ Step 1: PLAN IT
+│   → Command: /plan Build [what you want]
+│   → Benefit: Saves 40-60% tokens by designing first
+│                                                                            │
+│ Step 2: LOAD EXPERTS
+│   → "Use Backend Architect from @agency-agents"
+│   → "Use Security specialist from @everything-claude-code"
+│   → Benefit: Get expert guidance automatically
+│                                                                            │
+│ Step 3: FOLLOW TDD
+│   → "Use TDD workflow from @superpowers"
+│   → Write tests first, then code
+│   → Benefit: Fewer bugs, faster implementation
+│                                                                            │
+│ Step 4: CODE IT
+│   → Implement based on your plan and tests
+│   → Benefit: Clear direction, less token waste
+│                                                                            │
+│ Step 5: REVIEW & SIMPLIFY
+│   → "Use code reviewer from @everything-claude-code"
+│   → /simplify
+│   → Benefit: Professional quality code
+│                                                                            │
+│ 📊 TOKEN SAVINGS: 60-70%  |  ⏱️  TOTAL TIME: ~80 min  |  ✨ QUALITY: Expert
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 2️⃣ DEBUGGING A PROBLEM ────────────────────────────────────────────────────┐
+│                                                                            │
+│ Step 1: DESCRIBE THE BUG
+│   → "I'm getting [error]. Debug this."
+│   → Be specific about what's broken
+│                                                                            │
+│ Step 2: LOAD EXPERT INVESTIGATOR
+│   → "Use Backend Architect from @agency-agents"
+│   → "Use Security specialist from @everything-claude-code"
+│   → Benefit: Expert eyes on the problem
+│                                                                            │
+│ Step 3: GET THE FIX
+│   → Implement the suggested fix
+│   → Use language rules from @everything-claude-code
+│                                                                            │
+│ Step 4: TEST IT
+│   → Write tests for the fix
+│   → Verify issue is resolved
+│                                                                            │
+│ 📊 TOKEN SAVINGS: 40-50%  |  ⏱️  TOTAL TIME: ~30 min  |  ✨ SPEED: Fast
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 3️⃣ REVIEWING CODE QUALITY ──────────────────────────────────────────────────┐
+│                                                                            │
+│ Step 1: REQUEST CODE REVIEW
+│   → "Use code reviewer from @everything-claude-code"
+│   → Paste your code
+│   → Get professional feedback
+│                                                                            │
+│ Step 2: SECURITY CHECK
+│   → "Use Security specialist from @everything-claude-code"
+│   → Check for vulnerabilities
+│                                                                            │
+│ Step 3: SIMPLIFY
+│   → /simplify
+│   → Remove unnecessary code
+│                                                                            │
+│ Step 4: APPLY FIXES
+│   → Implement suggestions
+│   → Verify with code reviewer
+│                                                                            │
+│ 📊 TOKEN SAVINGS: 50%  |  ⏱️  TOTAL TIME: ~15 min  |  ✨ QUALITY: Pro
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 4️⃣ LEARNING A PATTERN/SKILL ──────────────────────────────────────────────┐
+│                                                                            │
+│ Step 1: REQUEST THE PATTERN
+│   → "Show me [Pattern Name] from @superpowers"
+│   → Get structured explanation
+│                                                                            │
+│ Step 2: UNDERSTAND IT
+│   → Load relevant expert from @agency-agents
+│   → "Explain this pattern with a real example"
+│                                                                            │
+│ Step 3: APPLY IT
+│   → "Apply this pattern to my code: [code]"
+│   → Get implementation guidance
+│                                                                            │
+│ 📊 TOKEN SAVINGS: 40%  |  ⏱️  TOTAL TIME: ~10 min  |  ✨ LEARNING: Fast
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎭 PICK AN EXPERT FOR YOUR TASK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FROM @agency-agents (Domain Experts):
+
+  👨‍💼 ENGINEERING
+  ├─ "Backend Architect"    → API design, system architecture
+  ├─ "Frontend Developer"   → UI, React, Vue, Angular
+  ├─ "Mobile Developer"     → iOS, Android, Flutter
+  ├─ "DevOps Specialist"    → Infrastructure, deployment, scaling
+  ├─ "Security Expert"      → Security vulnerabilities, best practices
+  └─ "AI Engineer"          → Machine learning, AI models
+
+  🎨 DESIGN & PRODUCT
+  ├─ "UI Designer"          → User interface design
+  ├─ "UX Researcher"        → User experience, user research
+  ├─ "Product Manager"      → Feature planning, roadmap
+  └─ "Brand Strategist"     → Brand and visual identity
+
+  📈 SALES & MARKETING
+  ├─ "Content Creator"      → Writing, documentation
+  ├─ "Marketing Strategist" → Growth strategies
+  ├─ "Growth Hacker"        → Rapid growth tactics
+  └─ "SEO Expert"           → Search optimization
+
+  🧪 QUALITY & OPS
+  ├─ "QA Engineer"          → Testing, quality assurance
+  ├─ "Accessibility Auditor"→ Accessibility standards
+  └─ "Operations Manager"   → Operations, processes
+
+FROM @everything-claude-code (Specialized Skills):
+
+  🔒 SECURITY
+  └─ "Security Specialist"  → Vulnerabilities, best practices
+
+  👀 REVIEW
+  └─ "Code Reviewer Agent"  → Code quality, best practices
+
+  💻 LANGUAGE RULES
+  ├─ Python Rules           → Python best practices
+  ├─ TypeScript Rules       → TypeScript standards
+  ├─ Go Rules               → Go idioms
+  ├─ Rust Rules             → Rust safety
+  ├─ Java Rules             → Java patterns
+  └─ [More languages...]    → Language-specific guidance
+
+FROM @superpowers (Workflows):
+
+  📋 PLANNING
+  ├─ "Design Phase"         → Architecture and design
+  ├─ "Specification"        → Clear requirements
+  └─ "Task Breakdown"       → Split into subtasks
+
+  🧪 TESTING
+  ├─ "TDD Workflow"         → Test-driven development
+  ├─ "Unit Testing"         → Single component tests
+  └─ "Integration Testing"  → Component interaction tests
+
+  👥 COLLABORATION
+  ├─ "Code Review Process"  → Systematic reviews
+  └─ "Multi-Agent Coordination" → Team workflows
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 EXAMPLE PROMPTS (Copy & Paste)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Building a New Feature:
+  /plan Create a user authentication system with JWT tokens
+  Use Backend Architect from @agency-agents for the design
+  Use Security specialist from @everything-claude-code for security
+  Follow TDD workflow from @superpowers
+
+  [Then code based on the plan]
+
+  Use code reviewer from @everything-claude-code to review:
+  [paste your code]
+
+🐛 Debugging an Issue:
+  Use Backend Architect from @agency-agents to debug this:
+  [describe the problem]
+
+  Use Security specialist from @everything-claude-code to check security
+
+  [Fix the issue]
+
+  Use code reviewer from @everything-claude-code to verify the fix
+
+🔍 Code Review:
+  Use code reviewer from @everything-claude-code to review:
+  [paste your code]
+
+  Use Security specialist from @everything-claude-code for security audit
+
+  /simplify
+
+📚 Learning Something:
+  Show me the [Pattern Name] from @superpowers
+
+  Act as Backend Architect from @agency-agents and explain this with examples
+
+  Apply this pattern to my code: [your code]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ POWER COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /plan [task]              → Plan before coding (SAVES 40-60% TOKENS!)
+  /simplify                 → Clean up your code
+  /fast                     → Faster responses
+
+  @everything-claude-code   → Access agents, skills, language rules
+  @superpowers              → Access workflows, patterns, TDD
+  @agency-agents            → Access expert personas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 TOKEN SAVINGS MATRIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Task Type          | Without Frameworks | With Frameworks | SAVINGS
+-------------------+-------------------+-----------------+----------
+New Feature        | 3-4 hours         | ~80 minutes     | 60-70% 🚀
+Debugging          | 1-2 hours         | ~30 minutes     | 50-60%
+Code Review        | 30 minutes        | ~15 minutes     | 50%
+Learning Pattern   | 1-2 hours         | ~10 minutes     | 80%
+Security Review    | 2-3 hours         | ~30 minutes     | 70%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎓 BEST PRACTICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. ALWAYS START WITH /plan
+     └─ Saves the most tokens (40-60%)
+     └─ Prevents costly rewrites
+     └─ Better solutions overall
+
+  2. USE AGENT NAMES INSTEAD OF DESCRIPTIONS
+     ✅ "Use Backend Architect from @agency-agents"
+     ❌ "Design a scalable, modular architecture with separation of concerns..."
+
+  3. FOLLOW TDD WORKFLOW
+     └─ Write tests FIRST
+     └─ Code comes after tests
+     └─ Fewer bugs, faster implementation
+
+  4. SIMPLIFY EVERYTHING
+     └─ /simplify after every coding session
+     └─ Remove unnecessary complexity
+     └─ Improves code quality
+
+  5. CHAIN EXPERTS TOGETHER
+     └─ Backend Architect + Security Specialist + Code Reviewer
+     └─ Professional-grade output
+     └─ Catches issues early
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 FRAMEWORK LOCATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  everything-claude-code
+  └─ /home/user/everything-claude-code/
+     ├─ agents/          (30+ specialized agents)
+     ├─ skills/          (135+ domain skills)
+     ├─ commands/        (60+ quick commands)
+     └─ rules/           (Language rules: Python, TypeScript, Go, etc)
+
+  superpowers
+  └─ /home/user/superpowers/
+     ├─ design/          (Design phase guidance)
+     ├─ workflows/       (TDD, code review, etc)
+     └─ patterns/        (Common patterns and solutions)
+
+  agency-agents
+  └─ /home/user/agency-agents/
+     ├─ engineering/     (Dev personas)
+     ├─ design/          (Design personas)
+     ├─ product/         (Product personas)
+     ├─ sales/           (Sales & Marketing personas)
+     └─ operations/      (QA & Ops personas)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ready to start? Begin with: /plan [your task] 🚀
+
+See COMPLETE_GUIDE.md for detailed explanations and more examples.
