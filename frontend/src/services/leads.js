@@ -7,6 +7,12 @@ export const leadsApi = {
   get: (id) =>
     api.get(`/api/v1/leads/${id}`).then(r => r.data),
 
+  create: (data) =>
+    api.post('/api/v1/leads', data).then(r => r.data),
+
+  importLeads: (leads) =>
+    api.post('/api/v1/leads/import', { leads }).then(r => r.data),
+
   updateStatus: (id, status) =>
     api.patch(`/api/v1/leads/${id}/status`, { status }).then(r => r.data),
 

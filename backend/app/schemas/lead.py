@@ -63,6 +63,34 @@ class LeadOut(BaseModel):
     updated_at: datetime
 
 
+class LeadCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    email: Optional[EmailStr] = None
+    city: Optional[str] = Field(None, max_length=100)
+    source: LeadSource = LeadSource.facebook
+    campaign_name: Optional[str] = Field(None, max_length=200)
+
+
+class LeadImportRow(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    email: Optional[EmailStr] = None
+    city: Optional[str] = Field(None, max_length=100)
+    source: LeadSource = LeadSource.facebook
+    campaign_name: Optional[str] = Field(None, max_length=200)
+
+
+class LeadImportRequest(BaseModel):
+    leads: List[LeadImportRow] = Field(..., min_length=1, max_length=500)
+
+
+class CsvImportResult(BaseModel):
+    imported: int
+    skipped: int
+    errors: List[str]
+
+
 class LeadStatusUpdate(BaseModel):
     status: LeadStatus
 

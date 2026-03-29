@@ -97,6 +97,34 @@ async def update_lead_status(db: Client, lead_id: str, workspace_id: str, status
     return result.data[0]
 
 
+async def bulk_create_leads(db: Client, workspace_id: str, rows: list[dict]) -> tuple[int, int, list[str]]:
+    """Insert multiple leads. Returns (imported, skipped, errors)."""
+    imported = 0
+    skipped = 0
+    errors = []
+    for i, row in enumerate(rows):
+        try:
+            payload = {
+                "workspace_id":  workspace_id,
+                "name":          row.get("name", "Unknown"),
+                "phone":         row.get("phone") or None,
+                "email":         row.get("email") or None,
+                "city":          row.get("city") or None,
+                "source":        row.get("source", "facebook"),
+                "status":        "new",
+                "campaign_name": row.get("campaign_name") or None,
+            }
+            db.table("leads").insert(payload).execute()
+            imported += 1
+        except Exception as exc:
+            msg = str(exc)
+            if "duplicate" in msg.lower() or "unique" in msg.lower():
+                skipped += 1
+            else:
+                errors.append(f"Row {i + 1} ({row.get('name', '?')}): {msg}")
+    return imported, skipped, errors
+
+
 # ── Notes ─────────────────────────────────────────────────────────────────────
 async def add_note(db: Client, lead_id: str, workspace_id: str, content: str, user_id: str) -> dict:
     # Verify lead belongs to workspace

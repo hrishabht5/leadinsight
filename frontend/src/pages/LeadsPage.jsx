@@ -2,19 +2,23 @@ import { useState, useCallback } from 'react'
 import { leadsApi } from '../services/leads'
 import { usePagination } from '../hooks/usePagination'
 import { useDebounce } from '../hooks/useDebounce'
-import LeadCard   from '../components/LeadCard'
-import LeadPanel  from '../components/LeadPanel'
-import EmptyState from '../components/EmptyState'
+import LeadCard        from '../components/LeadCard'
+import LeadPanel       from '../components/LeadPanel'
+import EmptyState      from '../components/EmptyState'
+import AddLeadModal    from '../components/AddLeadModal'
+import ImportCsvModal  from '../components/ImportCsvModal'
 import { LeadListSkeleton } from '../components/Skeletons'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal, UserPlus, Upload } from 'lucide-react'
 
 const STATUSES = ['all','new','contacted','converted','lost']
 const SOURCES  = ['all','facebook','instagram']
 
 export default function LeadsPage() {
-  const [filters, setFilters]   = useState({ status: 'all', source: 'all' })
-  const [search, setSearch]     = useState('')
-  const [selected, setSelected] = useState(null)
+  const [filters, setFilters]     = useState({ status: 'all', source: 'all' })
+  const [search, setSearch]       = useState('')
+  const [selected, setSelected]   = useState(null)
+  const [showAdd, setShowAdd]     = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const debouncedSearch = useDebounce(search, 350)
 
   const fetchFn = useCallback(({ page, page_size }) => {
@@ -50,9 +54,27 @@ export default function LeadsPage() {
 
   return (
     <div className="p-5 md:p-6 space-y-5">
-      <div>
-        <h1 className="font-syne font-bold text-2xl">All Leads</h1>
-        <p className="text-muted text-sm mt-0.5">{total} total leads</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-syne font-bold text-2xl">All Leads</h1>
+          <p className="text-muted text-sm mt-0.5">{total} total leads</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowImport(true)}
+            className="btn-ghost flex items-center gap-2 text-sm"
+          >
+            <Upload size={14} />
+            Import CSV
+          </button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="btn-primary flex items-center gap-2 text-sm"
+          >
+            <UserPlus size={14} />
+            Add Lead
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -127,6 +149,20 @@ export default function LeadsPage() {
           lead={selected}
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {showAdd && (
+        <AddLeadModal
+          onClose={() => setShowAdd(false)}
+          onCreated={() => reset()}
+        />
+      )}
+
+      {showImport && (
+        <ImportCsvModal
+          onClose={() => setShowImport(false)}
+          onImported={() => reset()}
         />
       )}
     </div>

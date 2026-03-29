@@ -1,5 +1,7 @@
 """
 LeadPulse — Leads Routes
+POST   /api/v1/leads              Create lead manually
+POST   /api/v1/leads/import       Bulk import leads (JSON)
 GET    /api/v1/leads              List leads (paginated, filterable)
 GET    /api/v1/leads/stream       SSE — real-time lead events
 GET    /api/v1/leads/{id}         Single lead detail
@@ -12,10 +14,37 @@ from supabase import Client
 
 from app.core.security import get_current_user, decode_token
 from app.db.supabase import get_db
-from app.schemas.lead import LeadListResponse, LeadStatus, LeadStatusUpdate, NoteCreate
+from app.schemas.lead import (
+    CsvImportResult, LeadCreate, LeadImportRequest,
+    LeadListResponse, LeadOut, LeadStatus, LeadStatusUpdate, NoteCreate,
+)
 from app.services import lead_service, notifications
 
 router = APIRouter()
+
+
+@router.post("", response_model=LeadOut, status_code=201)
+async def create_lead(
+    body: LeadCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Client = Depends(get_db),
+):
+    lead = await lead_service.create_lead(db, current_user["workspace_id"], body.model_dump())
+    await notifications.broadcast_new_lead(current_user["workspace_id"], lead)
+    return lead
+
+
+@router.post("/import", response_model=CsvImportResult, status_code=201)
+async def import_leads(
+    body: LeadImportRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Client = Depends(get_db),
+):
+    rows = [row.model_dump() for row in body.leads]
+    imported, skipped, errors = await lead_service.bulk_create_leads(
+        db, current_user["workspace_id"], rows
+    )
+    return CsvImportResult(imported=imported, skipped=skipped, errors=errors)
 
 
 @router.get("", response_model=LeadListResponse)
