@@ -226,4 +226,6 @@ async def subscribe_page_to_leadgen(page_id: str, page_access_token: str) -> boo
             "subscribed_fields": "leadgen",
             "access_token": page_access_token,
         })
-    return resp.json().get("success", False)
+        data = resp.json()
+        logger.info(f"🔗 Subscribing page {page_id} to webhook → status={resp.status_code} raw={data}")
+        return data.get("success", False)
