@@ -115,7 +115,7 @@ async def connect_facebook(
             "page_name":         page["name"],
             "page_access_token": page_token,
             "user_access_token": user_token,
-        }).execute()
+        }, on_conflict="workspace_id,page_id").execute()
         connected_pages.append(page)
 
     first = connected_pages[0]
