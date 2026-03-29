@@ -8,10 +8,13 @@ Handles:
 """
 import hashlib
 import hmac
+import logging
 import httpx
 from typing import Optional
 
 from app.core.config import settings
+
+logger = logging.getLogger("leadpulse.facebook")
 
 
 GRAPH_BASE = f"https://graph.facebook.com/{settings.FACEBOOK_API_VERSION}"
@@ -125,10 +128,15 @@ async def exchange_code_for_token(code: str, redirect_uri: str) -> dict:
         "redirect_uri":  redirect_uri,
         "code":          code,
     }
+    logger.info(f"🔑 Exchanging code for token. redirect_uri={redirect_uri}")
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(url, params=params)
+        data = resp.json()
+        logger.info(f"🔑 Token exchange response status={resp.status_code} keys={list(data.keys())}")
+        if resp.status_code != 200:
+            logger.error(f"❌ Token exchange failed: {data}")
         resp.raise_for_status()
-        return resp.json()   # { access_token, token_type }
+        return data   # { access_token, token_type }
 
 
 async def get_long_lived_token(short_lived_token: str) -> dict:
@@ -149,11 +157,20 @@ async def get_long_lived_token(short_lived_token: str) -> dict:
 async def get_pages(user_access_token: str) -> list[dict]:
     """Return the list of pages the user manages."""
     url = f"{GRAPH_BASE}/me/accounts"
-    params = {"access_token": user_access_token, "fields": "id,name,access_token,instagram_business_account"}
+    params = {
+        "access_token": user_access_token,
+        "fields": "id,name,access_token,instagram_business_account",
+        "limit": 100,
+    }
+    logger.info("📃 Fetching /me/accounts from Facebook Graph API...")
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(url, params=params)
+        data = resp.json()
+        logger.info(f"📃 /me/accounts response status={resp.status_code} raw={data}")
         resp.raise_for_status()
-        return resp.json().get("data", [])
+        pages = data.get("data", [])
+        logger.info(f"📃 Found {len(pages)} page(s): {[p.get('name') for p in pages]}")
+        return pages
 
 
 async def subscribe_page_to_leadgen(page_id: str, page_access_token: str) -> bool:
