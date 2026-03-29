@@ -5,6 +5,7 @@ POST /api/v1/auth/login
 POST /api/v1/auth/facebook/connect
 GET  /api/v1/auth/facebook/pages
 """
+import logging
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
@@ -17,6 +18,7 @@ from app.schemas.auth import (
 )
 from app.services import facebook as fb_service
 
+logger = logging.getLogger("leadpulse.auth")
 router = APIRouter()
 
 
@@ -102,8 +104,12 @@ async def connect_facebook(
 
     connected_pages = []
     for page in pages:
-        page_id = page["id"]
-        page_token = page["access_token"]
+        page_id  = page.get("id")
+        page_token = page.get("access_token")
+
+        if not page_token:
+            logger.warning(f"⚠️  Skipping page '{page.get('name')}' ({page_id}) — no access_token (Business Manager restriction)")
+            continue
 
         # Subscribe page to webhook
         await fb_service.subscribe_page_to_leadgen(page_id, page_token)
@@ -117,6 +123,10 @@ async def connect_facebook(
             "user_access_token": user_token,
         }, on_conflict="workspace_id,page_id").execute()
         connected_pages.append(page)
+        logger.info(f"✅ Connected page: {page['name']} ({page_id})")
+
+    if not connected_pages:
+        raise HTTPException(status_code=400, detail="No pages could be connected — pages may lack access tokens")
 
     first = connected_pages[0]
     return FacebookTokenResponse(
