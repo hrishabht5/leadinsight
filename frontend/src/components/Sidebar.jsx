@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usersApi } from '../services/leads'
 import {
   LayoutDashboard, Users, BarChart3, Settings, LogOut, Zap
 } from 'lucide-react'
@@ -14,6 +16,14 @@ const links = [
 export default function Sidebar({ newCount }) {
   const { logout } = useAuth()
   const navigate   = useNavigate()
+  const [connStatus, setConnStatus] = useState({ connected: false, pageCount: 0 })
+
+  // Fetch actual connection status on mount
+  useEffect(() => {
+    usersApi.getConnectionStatus()
+      .then(setConnStatus)
+      .catch(() => {})
+  }, [])
 
   return (
     <aside className="fixed top-0 left-0 bottom-0 w-[220px] bg-s1 border-r border-white/[0.07] flex flex-col z-50">
@@ -56,11 +66,23 @@ export default function Sidebar({ newCount }) {
       {/* Footer */}
       <div className="p-3 border-t border-white/[0.07] space-y-2">
         <div className="flex items-center gap-2.5 bg-s2 border border-white/[0.07] rounded-xl p-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_#00f5a0] animate-pulse-slow flex-shrink-0" />
-          <div>
-            <p className="text-white text-[11px] font-semibold">Webhook Active</p>
-            <p className="text-muted text-[10px]">FB & IG Connected</p>
-          </div>
+          {connStatus.connected ? (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_#00f5a0] animate-pulse-slow flex-shrink-0" />
+              <div>
+                <p className="text-white text-[11px] font-semibold">Webhook Active</p>
+                <p className="text-muted text-[10px]">{connStatus.pageCount} page{connStatus.pageCount !== 1 ? 's' : ''} connected</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-dim flex-shrink-0" />
+              <div>
+                <p className="text-muted text-[11px] font-semibold">No Integrations</p>
+                <p className="text-dim text-[10px]">Connect in Settings</p>
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={() => { logout(); navigate('/login') }}
@@ -73,3 +95,4 @@ export default function Sidebar({ newCount }) {
     </aside>
   )
 }
+

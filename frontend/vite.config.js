@@ -16,4 +16,23 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Production optimizations
+    sourcemap: true,
+    minify: 'esbuild',  // Built-in, fast, no extra deps
+    rollupOptions: {
+      output: {
+        // Chunk splitting for better caching
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          utils: ['axios', 'date-fns'],
+        },
+      },
+    },
+    // Warn on large chunks
+    chunkSizeWarningLimit: 500,
+  },
 })
+
+

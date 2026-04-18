@@ -18,9 +18,14 @@ setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Validate config before anything else
+    settings.validate_for_production()
+
     await init_supabase()
     import logging
-    logging.getLogger("leadpulse").info("✅ LeadPulse backend started.")
+    logging.getLogger("leadpulse").info(
+        f"✅ LeadPulse backend started. env={settings.ENVIRONMENT} debug={settings.DEBUG}"
+    )
     yield
     logging.getLogger("leadpulse").info("🛑 LeadPulse backend shutting down.")
 
@@ -40,8 +45,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
 )
 app.middleware("http")(log_requests)
 
@@ -63,4 +68,9 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "environment": settings.ENVIRONMENT,
+    }
+

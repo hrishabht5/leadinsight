@@ -2,12 +2,20 @@
 LeadPulse — Lead Service
 All Supabase DB interactions for leads and notes.
 """
+import logging
 from typing import Optional
 from uuid import UUID
 
 from supabase import Client
 
 from app.schemas.lead import LeadStatus
+
+logger = logging.getLogger("leadpulse.lead_service")
+
+
+def _escape_search(term: str) -> str:
+    """Escape SQL wildcard characters for safe use in ilike filters."""
+    return term.replace("%", "\\%").replace("_", "\\_")
 
 
 # ── Leads ─────────────────────────────────────────────────────────────────────
@@ -39,11 +47,12 @@ async def get_leads(
     db: Client,
     workspace_id: str,
     status: Optional[str] = None,
+    source: Optional[str] = None,
     search: Optional[str] = None,
     page: int = 1,
     page_size: int = 50,
 ) -> tuple[list, int]:
-    """Paginated lead list with optional status filter and search."""
+    """Paginated lead list with optional status, source filter and search."""
     query = (
         db.table("leads")
         .select("*, notes(*)", count="exact")
@@ -52,9 +61,12 @@ async def get_leads(
     )
     if status:
         query = query.eq("status", status)
+    if source:
+        query = query.eq("source", source)
     if search:
+        safe = _escape_search(search.strip())
         query = query.or_(
-            f"name.ilike.%{search}%,phone.ilike.%{search}%,email.ilike.%{search}%,campaign_name.ilike.%{search}%"
+            f"name.ilike.%{safe}%,phone.ilike.%{safe}%,email.ilike.%{safe}%,campaign_name.ilike.%{safe}%"
         )
 
     offset = (page - 1) * page_size
@@ -141,11 +153,31 @@ async def add_note(db: Client, lead_id: str, workspace_id: str, content: str, us
 
 # ── Analytics ─────────────────────────────────────────────────────────────────
 async def get_lead_stats(db: Client, workspace_id: str) -> dict:
-    result = db.table("leads").select("status, source", count="exact").eq("workspace_id", workspace_id).execute()
+    result = db.table("leads").select("status, source, created_at, updated_at", count="exact").eq("workspace_id", workspace_id).execute()
     rows = result.data or []
-    stats = {"total": len(rows), "new": 0, "contacted": 0, "converted": 0, "lost": 0, "facebook": 0, "instagram": 0}
+    stats = {
+        "total": len(rows), "new": 0, "contacted": 0, "converted": 0, "lost": 0,
+        "facebook": 0, "instagram": 0, "avg_response_minutes": None,
+    }
+    response_times = []
     for r in rows:
-        s = r.get("status"); src = r.get("source")
-        if s in stats: stats[s] += 1
-        if src in stats: stats[src] += 1
+        s = r.get("status")
+        src = r.get("source")
+        if s in stats:
+            stats[s] += 1
+        if src in stats:
+            stats[src] += 1
+        # Calculate response time for leads that moved beyond "new"
+        if s and s != "new" and r.get("created_at") and r.get("updated_at"):
+            try:
+                from datetime import datetime
+                created = datetime.fromisoformat(r["created_at"].replace("Z", "+00:00"))
+                updated = datetime.fromisoformat(r["updated_at"].replace("Z", "+00:00"))
+                diff_minutes = (updated - created).total_seconds() / 60
+                if diff_minutes >= 0:
+                    response_times.append(diff_minutes)
+            except Exception:
+                pass
+    if response_times:
+        stats["avg_response_minutes"] = round(sum(response_times) / len(response_times), 1)
     return stats

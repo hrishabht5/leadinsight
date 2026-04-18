@@ -50,6 +50,7 @@ async def import_leads(
 @router.get("", response_model=LeadListResponse)
 async def list_leads(
     status: str | None = Query(None),
+    source: str | None = Query(None),
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -58,7 +59,7 @@ async def list_leads(
 ):
     leads, total = await lead_service.get_leads(
         db, current_user["workspace_id"],
-        status=status, search=search,
+        status=status, source=source, search=search,
         page=page, page_size=page_size,
     )
     return LeadListResponse(leads=leads, total=total, page=page, page_size=page_size)

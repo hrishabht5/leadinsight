@@ -74,7 +74,12 @@ export default function AnalyticsPage() {
           { label: 'Total Leads',       value: summary?.total,     color: '#4d9eff' },
           { label: 'Conversion Rate',   value: convRate + '%',     color: '#fbbf24' },
           { label: 'Converted',         value: summary?.converted, color: '#00f5a0' },
-          { label: 'Avg Response Time', value: '< 5 min',          color: '#9d7cf8' },
+          { label: 'Avg Response Time', value: summary?.avg_response_minutes != null
+            ? (summary.avg_response_minutes < 60
+              ? `${Math.round(summary.avg_response_minutes)} min`
+              : `${(summary.avg_response_minutes / 60).toFixed(1)} hr`)
+            : '—',
+            color: '#9d7cf8' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card p-4">
             <p className="text-[10px] text-dim font-mono uppercase tracking-wider mb-2">{label}</p>
@@ -153,22 +158,29 @@ export default function AnalyticsPage() {
         <div className="card p-5">
           <p className="font-syne font-bold text-sm mb-5">🔻 Conversion Funnel</p>
           <div className="space-y-2.5">
-            {[
-              { label: 'Total Leads', value: summary?.total,     color: '#4d9eff', w: '100%' },
-              { label: 'New',         value: summary?.new,       color: '#00f5a0', w: '80%'  },
-              { label: 'Contacted',   value: summary?.contacted, color: '#9d7cf8', w: '60%'  },
-              { label: 'Converted',   value: summary?.converted, color: '#fbbf24', w: '40%'  },
-            ].map(({ label, value, color, w }) => (
-              <div key={label} className="flex items-center gap-3" style={{ width: w }}>
-                <div
-                  className="flex items-center justify-between flex-1 px-3 py-2 rounded-xl border"
-                  style={{ background: color+'12', borderColor: color+'30' }}
-                >
-                  <span className="text-xs font-medium" style={{ color }}>{label}</span>
-                  <span className="font-syne font-bold text-sm" style={{ color }}>{value ?? 0}</span>
-                </div>
-              </div>
-            ))}
+            {(() => {
+              const funnelData = [
+                { label: 'Total Leads', value: summary?.total     || 0, color: '#4d9eff' },
+                { label: 'New',         value: summary?.new       || 0, color: '#00f5a0' },
+                { label: 'Contacted',   value: summary?.contacted || 0, color: '#9d7cf8' },
+                { label: 'Converted',   value: summary?.converted || 0, color: '#fbbf24' },
+              ]
+              const maxVal = Math.max(funnelData[0].value, 1) // Avoid division by zero
+              return funnelData.map(({ label, value, color }) => {
+                const widthPct = Math.max((value / maxVal) * 100, 8) // Minimum 8% so labels are visible
+                return (
+                  <div key={label} className="flex items-center gap-3" style={{ width: `${widthPct}%` }}>
+                    <div
+                      className="flex items-center justify-between flex-1 px-3 py-2 rounded-xl border"
+                      style={{ background: color+'12', borderColor: color+'30' }}
+                    >
+                      <span className="text-xs font-medium" style={{ color }}>{label}</span>
+                      <span className="font-syne font-bold text-sm" style={{ color }}>{value}</span>
+                    </div>
+                  </div>
+                )
+              })
+            })()}
           </div>
         </div>
       </div>

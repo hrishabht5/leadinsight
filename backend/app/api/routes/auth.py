@@ -7,10 +7,15 @@ GET  /api/v1/auth/facebook/pages
 """
 import logging
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from supabase import Client
 
-from app.core.security import hash_password, verify_password, create_access_token, get_current_user
+from app.core.config import settings
+from app.core.security import (
+    hash_password, verify_password, create_access_token,
+    get_current_user, validate_password_strength,
+)
+from app.core.rate_limiter import rate_limit
 from app.db.supabase import get_db
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, TokenResponse,
@@ -22,11 +27,33 @@ logger = logging.getLogger("leadpulse.auth")
 router = APIRouter()
 
 
+def _get_client_ip(request: Request) -> str:
+    """Extract client IP, respecting X-Forwarded-For from reverse proxies."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 # ── Register ──────────────────────────────────────────────────────────────────
 @router.post("/register", response_model=TokenResponse, status_code=201)
-async def register(payload: RegisterRequest, db: Client = Depends(get_db)):
+async def register(payload: RegisterRequest, request: Request, db: Client = Depends(get_db)):
+    # Rate limit by IP
+    client_ip = _get_client_ip(request)
+    await rate_limit(
+        key=f"register:{client_ip}",
+        limit=settings.RATE_LIMIT_REGISTER,
+        window=settings.RATE_LIMIT_WINDOW,
+    )
+
+    # Validate password strength
+    validate_password_strength(payload.password)
+
+    # Normalize email
+    email = payload.email.lower().strip()
+
     # Check duplicate email
-    existing = db.table("users").select("id").eq("email", payload.email).execute()
+    existing = db.table("users").select("id").eq("email", email).execute()
     if existing.data:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -36,8 +63,8 @@ async def register(payload: RegisterRequest, db: Client = Depends(get_db)):
 
     # Create user
     user = db.table("users").insert({
-        "email":        payload.email,
-        "full_name":    payload.full_name,
+        "email":        email,
+        "full_name":    payload.full_name.strip(),
         "password_hash": hash_password(payload.password),
         "workspace_id": workspace_id,
     }).execute()
@@ -48,6 +75,7 @@ async def register(payload: RegisterRequest, db: Client = Depends(get_db)):
         "email":        user_data["email"],
         "workspace_id": workspace_id,
     })
+    logger.info(f"✅ New user registered: {email} (workspace={workspace_id})")
     return TokenResponse(
         access_token=token,
         user_id=user_data["id"],
@@ -58,13 +86,25 @@ async def register(payload: RegisterRequest, db: Client = Depends(get_db)):
 
 # ── Login ─────────────────────────────────────────────────────────────────────
 @router.post("/login", response_model=TokenResponse)
-async def login(payload: LoginRequest, db: Client = Depends(get_db)):
-    result = db.table("users").select("*").eq("email", payload.email).execute()
+async def login(payload: LoginRequest, request: Request, db: Client = Depends(get_db)):
+    # Rate limit by IP
+    client_ip = _get_client_ip(request)
+    await rate_limit(
+        key=f"login:{client_ip}",
+        limit=settings.RATE_LIMIT_LOGIN,
+        window=settings.RATE_LIMIT_WINDOW,
+    )
+
+    # Normalize email
+    email = payload.email.lower().strip()
+
+    result = db.table("users").select("*").eq("email", email).execute()
     if not result.data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     user = result.data[0]
     if not verify_password(payload.password, user["password_hash"]):
+        logger.warning(f"⚠️  Failed login attempt for {email} from {client_ip}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({
@@ -150,3 +190,4 @@ async def list_pages(
         .execute()
     )
     return {"pages": result.data}
+

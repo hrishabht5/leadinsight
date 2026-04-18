@@ -3,17 +3,55 @@ import api from '../services/api'
 
 const AuthContext = createContext(null)
 
+/**
+ * Decode JWT payload without a library (browser-safe).
+ * Returns null if the token is malformed.
+ */
+function decodeJwtPayload(token) {
+  try {
+    const base64 = token.split('.')[1]
+    const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Check if a JWT token is expired (with 60s buffer).
+ */
+function isTokenExpired(token) {
+  const payload = decodeJwtPayload(token)
+  if (!payload?.exp) return true
+  return Date.now() >= (payload.exp * 1000) - 60_000 // 60s buffer
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]           = useState(null)
   const [loading, setLoading]     = useState(true)
 
-  // Rehydrate from localStorage on mount
+  // Rehydrate from localStorage on mount — with validation
   useEffect(() => {
-    const token = localStorage.getItem('lp_token')
-    const saved = localStorage.getItem('lp_user')
-    if (token && saved) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(JSON.parse(saved))
+    try {
+      const token = localStorage.getItem('lp_token')
+      const saved = localStorage.getItem('lp_user')
+
+      if (token && saved) {
+        // Validate token hasn't expired
+        if (isTokenExpired(token)) {
+          console.warn('[Auth] Token expired — clearing session')
+          localStorage.removeItem('lp_token')
+          localStorage.removeItem('lp_user')
+        } else {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+          setUser(JSON.parse(saved))
+        }
+      }
+    } catch (err) {
+      // Handle corrupted localStorage
+      console.error('[Auth] Failed to rehydrate session:', err)
+      localStorage.removeItem('lp_token')
+      localStorage.removeItem('lp_user')
     }
     setLoading(false)
   }, [])
@@ -56,3 +94,4 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext)
+

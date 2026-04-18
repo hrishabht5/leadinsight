@@ -1,6 +1,7 @@
 """
 LeadPulse — Auth Security (JWT + Password Hashing)
 """
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -14,6 +15,11 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer()
 
+_PASSWORD_MIN_LENGTH = 8
+_PASSWORD_PATTERN = re.compile(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+)
+
 
 # ── Password ─────────────────────────────────────────────────────────────────
 def hash_password(password: str) -> str:
@@ -24,13 +30,31 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
+def validate_password_strength(password: str) -> None:
+    """Raise HTTPException if password doesn't meet strength requirements."""
+    errors = []
+    if len(password) < _PASSWORD_MIN_LENGTH:
+        errors.append(f"Must be at least {_PASSWORD_MIN_LENGTH} characters")
+    if not re.search(r"[a-z]", password):
+        errors.append("Must contain at least one lowercase letter")
+    if not re.search(r"[A-Z]", password):
+        errors.append("Must contain at least one uppercase letter")
+    if not re.search(r"\d", password):
+        errors.append("Must contain at least one digit")
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Weak password: {'; '.join(errors)}",
+        )
+
+
 # ── JWT ───────────────────────────────────────────────────────────────────────
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -58,3 +82,4 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=401, detail="Token missing subject")
     return {"id": user_id, "email": payload.get("email"), "workspace_id": payload.get("workspace_id")}
+

@@ -24,21 +24,20 @@ export default function LeadsPage() {
   const fetchFn = useCallback(({ page, page_size }) => {
     const params = { page, page_size }
     if (filters.status !== 'all') params.status = filters.status
+    if (filters.source !== 'all') params.source = filters.source
     if (debouncedSearch)          params.search = debouncedSearch
     return leadsApi.list(params)
-  }, [filters.status, debouncedSearch])
+  }, [filters.status, filters.source, debouncedSearch])
 
   const { items: leads, total, loading, hasMore, reset, loadMore } = usePagination(fetchFn, { pageSize: 50 })
 
-  // Trigger reset when filters / debounced search change
+  // Filter key — triggers reset when any filter changes
   const [prevKey, setPrevKey] = useState('')
   const key = `${filters.status}:${filters.source}:${debouncedSearch}`
   if (key !== prevKey) { setPrevKey(key); reset() }
 
-  // Filter by source client-side (API doesn't expose source param directly)
-  const displayed = filters.source !== 'all'
-    ? leads.filter(l => l.source === filters.source)
-    : leads
+  // No more client-side source filtering — backend handles it now
+  const displayed = leads
 
   function setFilter(k, v) { setFilters(f => ({ ...f, [k]: v })) }
 

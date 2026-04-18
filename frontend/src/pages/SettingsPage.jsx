@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
-import { authApi } from '../services/leads'
+import { useState, useEffect, useCallback } from 'react'
+import { authApi, usersApi } from '../services/leads'
 import { useAuth } from '../context/AuthContext'
-import { Check, Copy, ExternalLink, RefreshCw } from 'lucide-react'
+import { Check, Copy, ExternalLink, RefreshCw, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-function Toggle({ value, onChange }) {
+function Toggle({ value, onChange, disabled }) {
   return (
     <button
-      onClick={() => onChange(!value)}
+      onClick={() => !disabled && onChange(!value)}
+      disabled={disabled}
       className={`relative w-10 h-5 rounded-full border transition-all
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         ${value ? 'bg-green/20 border-green/40' : 'bg-s3 border-white/[0.07]'}`}
     >
       <span className={`absolute top-[2px] w-4 h-4 rounded-full transition-all
@@ -42,6 +44,8 @@ export default function SettingsPage() {
   const { user } = useAuth()
   const [pages, setPages]   = useState([])
   const [copied, setCopied] = useState(false)
+  const [prefsLoading, setPrefsLoading] = useState(true)
+  const [savingPrefs, setSavingPrefs] = useState(false)
   const [notifs, setNotifs] = useState({
     push: true, email: true, whatsapp: false, sound: true,
   })
@@ -50,6 +54,44 @@ export default function SettingsPage() {
   })
 
   const webhookUrl = `${import.meta.env.VITE_API_URL || 'https://leadpulse-api-06py.onrender.com'}/webhook/facebook`
+
+  // Load preferences from backend on mount
+  useEffect(() => {
+    usersApi.getPreferences()
+      .then(prefs => {
+        if (prefs.notifications) setNotifs(prefs.notifications)
+        if (prefs.lead_settings) setLeadSettings(prefs.lead_settings)
+      })
+      .catch(() => {})  // Use defaults on error
+      .finally(() => setPrefsLoading(false))
+  }, [])
+
+  // Save preferences to backend (debounced via callback)
+  const savePrefs = useCallback(async (notifData, leadData) => {
+    setSavingPrefs(true)
+    try {
+      await usersApi.updatePreferences({
+        notifications: notifData,
+        lead_settings: leadData,
+      })
+    } catch {
+      // Silently fail — preferences are best-effort
+    } finally {
+      setSavingPrefs(false)
+    }
+  }, [])
+
+  function handleNotifChange(key, value) {
+    const updated = { ...notifs, [key]: value }
+    setNotifs(updated)
+    savePrefs(updated, leadSettings)
+  }
+
+  function handleLeadSettingChange(key, value) {
+    const updated = { ...leadSettings, [key]: value }
+    setLeadSettings(updated)
+    savePrefs(notifs, updated)
+  }
 
   useEffect(() => {
     authApi.getPages()
@@ -158,7 +200,7 @@ export default function SettingsPage() {
           { k: 'sound',    label: 'Sound alerts',        desc: 'Play a sound when a new lead arrives'        },
         ].map(({ k, label, desc }) => (
           <SettingRow key={k} label={label} desc={desc}>
-            <Toggle value={notifs[k]} onChange={v => setNotifs(n => ({ ...n, [k]: v }))} />
+            <Toggle value={notifs[k]} onChange={v => handleNotifChange(k, v)} disabled={prefsLoading} />
           </SettingRow>
         ))}
       </Section>
@@ -170,7 +212,7 @@ export default function SettingsPage() {
           { k: 'dedup',       label: 'Duplicate detection',    desc: 'Merge leads with the same phone number'            },
         ].map(({ k, label, desc }) => (
           <SettingRow key={k} label={label} desc={desc}>
-            <Toggle value={leadSettings[k]} onChange={v => setLeadSettings(s => ({ ...s, [k]: v }))} />
+            <Toggle value={leadSettings[k]} onChange={v => handleLeadSettingChange(k, v)} disabled={prefsLoading} />
           </SettingRow>
         ))}
       </Section>

@@ -22,3 +22,20 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+docker-compose.override.yml
+
+# Source maps (production builds)
+*.map
+
+# Claude Code Resources (local only)
+.claude-resources/

@@ -35,3 +35,19 @@ export const authApi = {
   getPages: () =>
     api.get('/api/v1/auth/facebook/pages').then(r => r.data),
 }
+
+export const usersApi = {
+  getPreferences: () =>
+    api.get('/api/v1/users/me/preferences').then(r => r.data),
+
+  updatePreferences: (data) =>
+    api.patch('/api/v1/users/me/preferences', data).then(r => r.data),
+
+  getConnectionStatus: () =>
+    api.get('/api/v1/auth/facebook/pages').then(r => ({
+      connected: (r.data.pages || []).length > 0,
+      pageCount: (r.data.pages || []).length,
+      pages: r.data.pages || [],
+    })).catch(() => ({ connected: false, pageCount: 0, pages: [] })),
+}
+

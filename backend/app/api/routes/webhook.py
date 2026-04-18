@@ -34,6 +34,8 @@ async def verify_webhook(
 
 
 # ── POST: Receive lead events ─────────────────────────────────────────────────
+_MAX_BODY_SIZE = 1_048_576  # 1 MB
+
 @router.post("/facebook", status_code=200)
 async def receive_webhook(
     request: Request,
@@ -42,6 +44,12 @@ async def receive_webhook(
     db: Client = Depends(get_db),
 ):
     body = await request.body()
+
+    # Reject oversized payloads
+    if len(body) > _MAX_BODY_SIZE:
+        logger.warning(f"⚠️  Webhook payload too large: {len(body)} bytes (max {_MAX_BODY_SIZE})")
+        raise HTTPException(status_code=413, detail="Payload too large")
+
     logger.info(f"📬 Webhook POST received — body_len={len(body)} sig={x_hub_signature_256[:20] if x_hub_signature_256 else 'MISSING'}…")
 
     # 1. Verify signature
